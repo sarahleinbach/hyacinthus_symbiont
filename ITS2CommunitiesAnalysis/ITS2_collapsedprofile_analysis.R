@@ -351,6 +351,7 @@ anova(dispprof5) #not significant 0.214
 set.seed(123)
 adonis(resistant_pair[, c(8:length(resistant_pair))]~month, data=resistant_pair, permutations=999,method="bray")
 #August vs. October in recovered colonies: not significant 0.706
+recovered_pair = read.csv("norm_profs_AO.csv")
 distprof6 = vegdist(recovered_pair[,8:ncol(recovered_pair)], method = "bray")
 dispprof6 = betadisper(distprof6,recovered_pair$month)
 anova(dispprof6) #not significant 0.7042
