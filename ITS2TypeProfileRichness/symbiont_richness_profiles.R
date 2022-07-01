@@ -72,7 +72,7 @@ crest = subset(richprofs, reef_zone == "crest")
 results15 = glm(Richness~month, data = crest, family = poisson)
 summary(results15)
 exp(confint(results15))
-#richness differences for forereef (actually deeper forereef) based on month (Aug vs Oct): not significant 0.3313
+#richness differences for forereef (actually deep forereef) based on month (Aug vs Oct): not significant 0.3313
 forereef = subset(richprofs, reef_zone == "forereef")
 results16 = glm(Richness~month, data = forereef, family = poisson)
 summary(results16)
@@ -140,10 +140,26 @@ for(Richness3 in levels(richprofs$Richness)) {
       }
     }
   }
-zone.labs <- c("backreef", "shallow forereef", "deeper forereef")
+normalize_month_counts = TRUE #TRUE or FALSE to either normalize by samples collected per month or not
+scale_factor = 1
+Richcountszone$Month = as.factor(Richcountszone$Month)
+Richcountszone$zone = as.factor(Richcountszone$zone)
+if(normalize_month_counts){
+  month_n = richprofs %>% dplyr::group_by(month) %>% dplyr::count(reef_zone)
+  scale_factor = 23
+  for(x in levels(Richcountszone$Month)){
+    for(y in levels(Richcountszone$zone)){
+      Richcountszone$counts[Richcountszone$Month == x & Richcountszone$zone == y] = Richcountszone$counts[Richcountszone$Month == x & Richcountszone$zone == y]/month_n$n[month_n$month == x & month_n$reef_zone == y]
+    }
+  }
+  
+}
+zone.labs <- c("backreef", "shallow forereef", "deep forereef")
 names(zone.labs) <- c("backreef", "crest", "forereef")
+
+#circles normalized to number of samples collected each month
 profzone = ggplot(data = Richcountszone)+
-  geom_point(mapping = aes(x = Month, y = richness, color = Month, fill = Month), shape = 21, color = "black", size = Richcountszone$counts)+
+  geom_point(mapping = aes(x = Month, y = richness, color = Month, fill = Month), shape = 21, color = "black", size = scale_factor*(Richcountszone$counts))+
   facet_wrap(~ zone, scale = "free_x", labeller = labeller(zone = zone.labs))+
   labs(x = "Month", y = "Richness")+
   theme_classic(base_size=12)+
@@ -171,7 +187,21 @@ for(Richness2 in levels(its2profNormResp$Richness)) {
     }
   }
 }
-zone.labs <- c("backreef", "shallow forereef", "deeper forereef")
+normalize_month_counts2 = TRUE #TRUE or FALSE to either normalize by samples collected per month or not
+scale_factor = 1
+Richcountsresp$Month = as.factor(Richcountsresp$Month)
+Richcountsresp$zone = as.factor(Richcountsresp$zone)
+if(normalize_month_counts2){
+  month_n2 = its2profNormResp %>% dplyr::group_by(month) %>% dplyr::count(reef_zone)
+  scale_factor = 23
+  for(x in levels(Richcountsresp$Month)){
+    for(y in levels(Richcountsresp$zone)){
+      Richcountsresp$counts[Richcountsresp$Month == x & Richcountsresp$zone == y] = Richcountsresp$counts[Richcountsresp$Month == x & Richcountsresp$zone == y]/month_n2$n[month_n2$month == x & month_n2$reef_zone == y]
+    }
+  }
+  
+}
+zone.labs <- c("backreef", "shallow forereef", "deep forereef")
 names(zone.labs) <- c("backreef", "crest", "forereef")
 profresp = ggplot(data = Richcountsresp)+
   #geom_boxplot(data = richprofs, mapping = aes(x = Month, y = richness), width = 0.6)+
@@ -181,7 +211,7 @@ profresp = ggplot(data = Richcountsresp)+
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
         panel.background = element_rect(colour = "black", size=1))+
-  geom_point(mapping = aes(x = Month, y = richness, color = Response, fill = Response), shape = 21, color = "black", size = Richcountsresp$counts)+
+  geom_point(mapping = aes(x = Month, y = richness, color = Response, fill = Response), shape = 21, color = "black", size = scale_factor*Richcountsresp$counts)+
   scale_fill_manual(values = c("#960200","#FFD046"))+
   scale_x_discrete(labels=c("May" = "May", "August" = "Aug", "October" = "Oct"))
 profresp
@@ -199,7 +229,21 @@ for(Richness4 in levels(may_health$Richness)) {
         } 
       }
     }
+}
+normalize_month_counts3 = TRUE #TRUE or FALSE to either normalize by samples collected per month or not
+scale_factor = 1
+Richcountshealth$health = as.factor(Richcountshealth$health)
+Richcountshealth$zone = as.factor(Richcountshealth$zone)
+if(normalize_month_counts3){
+  month_n3 = may_health %>% dplyr::group_by(bleaching_status) %>% dplyr::count(reef_zone)
+  scale_factor = 23
+  for(x in levels(Richcountshealth$health)){
+    for(y in levels(Richcountshealth$zone)){
+      Richcountshealth$counts[Richcountshealth$health == x & Richcountshealth$zone == y] = Richcountshealth$counts[Richcountshealth$health == x & Richcountshealth$zone == y]/month_n3$n[month_n3$bleaching_status == x & month_n3$reef_zone == y]
+    }
   }
+  
+}
 profhealth = ggplot(data = Richcountshealth)+
   facet_wrap(~zone, scale = "free_x")+
   labs(x = "Bleaching status", y = "Richness")+
@@ -207,7 +251,7 @@ profhealth = ggplot(data = Richcountshealth)+
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
         panel.background = element_rect(colour = "black", size=1))+
-  geom_point(mapping = aes(x = health, y = richness, color = health, fill = health), shape = 21, color = "black", size = Richcountshealth$counts)+
+  geom_point(mapping = aes(x = health, y = richness, color = health, fill = health), shape = 21, color = "black", size = scale_factor*Richcountshealth$counts)+
   scale_fill_manual(values = c("#BFACC8","#2A4470"), name = "Bleaching status")+
   theme(legend.position = "none")
 profhealth
